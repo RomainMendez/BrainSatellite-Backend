@@ -1,20 +1,24 @@
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+
 from abc import abstractmethod
 from typing import List, Optional, Tuple, Any
-from langchain import PromptTemplate
-#from langchain.llms import BaseLLM
-from langchain.chat_models.base import BaseChatModel
-from langchain.schema.messages import HumanMessage, SystemMessage, BaseMessage
-from langchain.chat_models import ChatOpenAI
 
-from architecture.constants import DEFAULT_MODEL_KWARGS, DATE_FORMAT
+from architecture.constants import DATE_FORMAT
 
-from .gbnf.date_grammar import create_gbnf_grammar_for_date
-from .gbnf.date_preset_prompts import preset_grammar
-from .gbnf.date_preset_prompts import added_prompts_for_date, parse_presets
+from architecture.query_llm_server.messages_types import ChatMessage, SystemMessage, AIMessage, HumanMessage
+from architecture.query_llm_server.query_llm import chat_completion, chat_completion_with_grammar
+
+from architecture.llm_variable_providers.gbnf.date_grammar import create_gbnf_grammar_for_date
+from architecture.llm_variable_providers.gbnf.date_preset_prompts import preset_grammar
+from architecture.llm_variable_providers.gbnf.date_preset_prompts import added_prompts_for_date, parse_presets
 
 from datetime import date, datetime
 
 import logging
+logger = logging.getLogger(__name__)
 
 
 class LLMVariableProvider():
@@ -129,10 +133,9 @@ class CombinedGBNFVariableProvider(LLMVariableProvider):
     def __init__(self, 
                  explainer_prompt: str, 
                  variables_descriptions_types: List[Tuple[str, str, str]], 
-                 llm : BaseChatModel):
+                 ):
         # Step 1 : Assign base variables
         super().__init__()
-        self.llm = llm
         self.variables_descriptions_types = variables_descriptions_types
         
         # Step 2 : Compute the prompt to be sent
@@ -150,15 +153,18 @@ You are going to be asked all variables at the same time. They will be asked in 
         self.grammar = create_gnbf_for_llm_variable_provider(variables_descriptions_types)
         #logging.debug("Grammar is : \n" + self.grammar)
         
-    def provide_variables(self, user_message: str, reference_timestamp: datetime = datetime.now(), memory: list[BaseMessage] = []) -> list[Any]:
-        messages: list[BaseMessage] = []
+    def provide_variables(self, user_message: str, reference_timestamp: datetime = datetime.now(), memory: list[ChatMessage] = [], options: dict = {}) -> list[Any]:
+        messages: list[ChatMessage] = []
         messages.append(SystemMessage(content=self.prompt))
         messages.extend(memory)
         messages.append(HumanMessage(content=user_message))
         
-        raw_output = self.llm.invoke(messages, grammar=self.grammar).content
-        if not isinstance(raw_output, str):
-            raise Exception("LLM output was not a string !")
+        if "n_predict" not in options:
+            logger.warning("n_predict not set ! The LLM might be rambling forever !")
+        
+        
+        
+        raw_output: str = chat_completion_with_grammar(messages, self.grammar, options=options)
         logging.info("Raw LLM output : " + raw_output)
         
         variables_generated: List[Any] = []
@@ -175,12 +181,10 @@ You are going to be asked all variables at the same time. They will be asked in 
 class StaticVariableProvider(LLMVariableProvider):
     def __init__(self, 
                  prompt: str, 
-                 variables_descriptions_types: List[Tuple[str, str, str]], 
-                 llm : BaseChatModel =ChatOpenAI(**DEFAULT_MODEL_KWARGS)
+                 variables_descriptions_types: List[Tuple[str, str, str]]
                  ):
         super().__init__()
         self.prompt = prompt
-        self.llm = llm
         self.variables_descriptions_types = variables_descriptions_types
         # TODO : Implement a check on the template to make sure that all variables are present
 
@@ -193,13 +197,8 @@ class StaticVariableProvider(LLMVariableProvider):
             messages.append(HumanMessage(content=user_message))
             grammar_raw = """root ::= (item)
 item ::= [^\n]+ "\n" """
-            raw_output = self.llm.invoke(messages, grammar=grammar_raw).content
+            raw_output: str = chat_completion_with_grammar(messages, grammar_raw)
             
-            if not isinstance(raw_output, str):
-                raise Exception("LLM output was not a string !")
-
-            
-
             if self.verify_output_is_none(raw_output):
                 variables_generated.append(None)
             else:

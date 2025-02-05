@@ -9,12 +9,9 @@ class ChatMessage(BaseModel):
     
 class HumanMessage(ChatMessage):
     role: str = "human"
-    content: str
     
 class SystemMessage(ChatMessage):
     role: str = "system"
-    content: str
 
 class AIMessage(ChatMessage):
     role: str = "ai"
-    content: str

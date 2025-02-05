@@ -1,6 +1,11 @@
 from abc import abstractmethod
-from langchain.chat_models import ChatOpenAI
-from langchain.schema.messages import HumanMessage, SystemMessage, BaseMessage, AIMessage
+
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
+from query_llm_server.messages_types import ChatMessage, HumanMessage, SystemMessage, AIMessage
+from query_llm_server.query_llm import chat_completion, chat_completion_with_grammar
 
 from typing import Dict, List, Optional, Any, Union
 
@@ -23,7 +28,7 @@ class BaseLLMTree(DecisionTree):
     
     def __init__(self, base_prompt:str, static_choices: Optional[List[str]] = None, model_kwargs: Dict[str, Any] = {}):
         self.base_prompt = base_prompt
-        self._chat_model = ChatOpenAI(**model_kwargs)
+
         if static_choices is not None:
             self.static_choices = static_choices
         else:
@@ -31,18 +36,20 @@ class BaseLLMTree(DecisionTree):
 
         # Making the static prompt
         self.computed_prompt = self.compute_prompt(base_prompt, self.static_choices)
-        self.messages: List[BaseMessage] = [SystemMessage(content=self.computed_prompt)]
+        self.messages: list[ChatMessage] = [SystemMessage(content=self.computed_prompt)]
 
-    def decide_on_message(self, message: str, previous_messages: list[BaseMessage] = [], can_be_none=False, **chain_kwargs) -> Optional[str]:
+    def decide_on_message(self, message: str, previous_messages: list[ChatMessage] = [], can_be_none=False, **chain_kwargs) -> Optional[str]:
+        logging.debug(f"Previous messages : {previous_messages}")
         if self.static_choices == None:
             raise Exception("Can't decide without choices !")
         temporary_messages = self.messages.copy()
         temporary_messages.append(HumanMessage(content=message))
         temporary_messages = previous_messages + temporary_messages # Adding the memory that may be added to the function call
-        logging.debug("Prompting with : \n{}".format(self.computed_prompt))
-        new_message: BaseMessage = self._chat_model.invoke(temporary_messages, **chain_kwargs)
+        logging.debug("Prompting with : {}".format(self.computed_prompt))
+        logging.debug("Messages : {}".format(temporary_messages))
+        logging.debug("type of message 1 : {}".format(type(temporary_messages[0])))
+        new_message_content: str = chat_completion(temporary_messages, model="mistral-nemo", options=chain_kwargs).strip()
 
-        new_message_content: str = str(new_message.content).strip()
         if can_be_none:
             if new_message_content == "" or new_message_content == " ":
                 return None

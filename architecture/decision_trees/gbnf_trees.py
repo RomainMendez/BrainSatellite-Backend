@@ -1,7 +1,12 @@
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+
 from architecture.decision_trees.decision_tree import DecisionTree, BaseLLMTree, STATIC_PROMPT_FORMAT
 from architecture.constants import DEFAULT_MODEL_KWARGS
 from architecture.grammar_build.bullet_point_builder import single_line_bullet_point_answer
-from langchain.schema.messages import HumanMessage, SystemMessage, AIMessage, BaseMessage
+from architecture.query_llm_server.messages_types import ChatMessage, HumanMessage, SystemMessage, AIMessage
 
 from typing import Dict, List, Optional
 
@@ -29,7 +34,7 @@ class MultiPromptGBNFDecistionTree(BaseLLMTree):
         model_kwargs: Dict[str, str] = DEFAULT_MODEL_KWARGS,
     ):
         self.underlyingGBNFTree = StaticGBNFDecisionTree(base_prompt=base_prompt, static_choices=static_choices, model_kwargs=model_kwargs)
-        memory_as_messages: list[BaseMessage] = []
+        memory_as_messages: list[ChatMessage] = []
         for (base_prompt, static_choices, prompt, decision) in memory_addon:
             computed_prompt:str = self.compute_prompt(base_prompt, static_choices)
             system_message = SystemMessage(content=computed_prompt)

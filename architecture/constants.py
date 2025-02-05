@@ -1,4 +1,4 @@
-DEFAULT_MODEL_KWARGS = {"temperature": 0.01, "max_tokens": 250, "top_p": 0.95, "frequency_penalty": 0.25}
+DEFAULT_MODEL_KWARGS = {"temperature": 0.01, "max_tokens": 5000, "top_p": 0.95, "frequency_penalty": 0.25}
 
 
 SEPARATOR = " "
