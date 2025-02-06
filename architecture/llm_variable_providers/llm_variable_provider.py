@@ -116,6 +116,10 @@ def create_gnbf_for_llm_variable_provider(
             part_content = create_gbnf_grammar_for_date(variable_name)
             part = f"{part_name} ::= {part_content}"
             all_parts.append(part)
+        if variable_type == "list[str]":
+            part_content = f"\"- {variable_name}:\" [a-zA-Z0-9, ]+ \"\\n\""
+            part = f"{part_name} ::= {part_content}"
+            all_parts.append(part)
         else:
             part_content = f"\"- {variable_name}:\" [a-zA-Z0-9 ]+ \"\\n\""
             part = f"{part_name} ::= {part_content}"
@@ -155,8 +159,8 @@ You are going to be asked all variables at the same time. They will be asked in 
         
     def provide_variables(self, user_message: str, reference_timestamp: datetime = datetime.now(), memory: list[ChatMessage] = [], options: dict = {}) -> list[Any]:
         messages: list[ChatMessage] = []
-        messages.append(SystemMessage(content=self.prompt))
         messages.extend(memory)
+        messages.append(SystemMessage(content=self.prompt))
         messages.append(HumanMessage(content=user_message))
         
         if "n_predict" not in options:

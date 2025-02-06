@@ -1,6 +1,6 @@
 import sys
-
-sys.path.append("../..")
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from datetime import datetime
 import logging
@@ -27,11 +27,12 @@ choices = [
     "- Retrieve todos",
     DO_NOTHING,
 ]
+from architecture.decision_trees.gbnf_trees import StaticGBNFDecisionTree
+
 _decision_tree = StaticGBNFDecisionTree(
     base_prompt=task_searching_prompt, model_kwargs=DEFAULT_MODEL_KWARGS, static_choices=choices
 )
 
-from architecture.decision_trees.gbnf_trees import StaticGBNFDecisionTree
 
 
 def decide_action_on_todo_list(message: str) -> str:
@@ -47,47 +48,15 @@ def decide_action_on_todo_list(message: str) -> str:
 
     return decision
 
+from todo_object import Todo
+from architecture.query_llm_server.query_llm import chat_completion_generate_object_with_memory
+from architecture.query_llm_server.messages_types import HumanMessage
+
 def receive_message(
     message: str,
-    nextcloud_url: str,
-    username: str,
-    password: str,
-    fqdn: str,
-    action_to_memory: dict[VALID_ACTIONS, list[TodoListMemory]],
-    valid_calendars: Optional[List[str]] = None,
-    created_at: Optional[datetime] = None,
-    transaction_id: Optional[str] = None
-) -> IntegrationDataAsJSON:
+    memory: list[tuple[HumanMessage, Todo]]
+) -> Todo:
     """
     Method to call to process all messages from user !
     """
-    
-    if transaction_id is None:
-        t_id = generate_random_id()
-    else:
-        t_id = transaction_id
-    
-    
-    logger = logging.getLogger(f"{t_id} - todo_list_agent.receive_message")
-
-    logger.info("Received message : {}".format(message))
-    logger.debug("Valid_calendars was : {}".format(valid_calendars))
-    if valid_calendars is None:
-        verify_list = True
-    else:
-        verify_list = False
-    caldav_task_handler: CalDavTaskHandler = CalDavTaskHandler(
-        nextcloud_url,
-        username,
-        password,
-        verify_lists=verify_list,
-        valid_calendars=valid_calendars,
-    )
-    reply_object: TodoListReply = TodoListReply(message, caldav_task_handler, fqdn, action_to_memory)
-    reply_object.complete()
-    logger.debug("Chosen action is : {}".format(reply_object.decision))
-
-    result: IntegrationDataAsJSON = reply_object.return_result()
-    logger.debug("Result raw data is: {}".format(result))
-
-    return result
+    return chat_completion_generate_object_with_memory(prompt=message, memory=memory)

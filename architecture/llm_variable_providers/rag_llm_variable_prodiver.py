@@ -1,26 +1,23 @@
 from architecture.llm_variable_providers.llm_variable_provider import CombinedGBNFVariableProvider, LLMVariableProvider
 from typing import Any
-from langchain.chat_models.base import BaseChatModel
-from langchain.schema.messages import HumanMessage, SystemMessage, BaseMessage, AIMessage
+from architecture.query_llm_server.messages_types import ChatMessage, HumanMessage, AIMessage
 
 class MultiPromptGBNFVariableProvider(LLMVariableProvider):
     def __init__(self,
                  explainer_prompt: str,
                  variables_descriptions_types: list[tuple[str, str, str]],
-                 llm: BaseChatModel,
                  memory: list[tuple[str, list[Any]]]|None   
                 ):
         # Step 1 : Assign base variables
         super().__init__()
-        self.llm = llm
         self.variables_descriptions_types = variables_descriptions_types
         
         self.memory = memory
         self.variable_names = [a[0] for a in self.variables_descriptions_types]
         self.gbnf_variable_provider = CombinedGBNFVariableProvider(explainer_prompt, variables_descriptions_types, llm)
     
-    def create_memory(self) -> list[BaseMessage]:
-        added_messages: list[BaseMessage] = []
+    def create_memory(self) -> list[ChatMessage]:
+        added_messages: list[ChatMessage] = []
         if self.memory is None:
             return added_messages
         for (user_prompt, variables) in self.memory:

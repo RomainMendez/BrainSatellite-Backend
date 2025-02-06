@@ -11,6 +11,7 @@ def test_verify_title_generated():
     variable_types: list[tuple[str, str, str]] = [
         ("title", "The title of task", "str"),
         ("description", "Short description of the task", "str"),
+        ("tags", "Tags of the task", "list[str]"),
     ]
     explainer_prompt = "You are an assistant that creates tasks for the user."
     

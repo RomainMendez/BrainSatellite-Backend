@@ -8,8 +8,9 @@ from architecture.constants import API_BASE, DEFAULT_MODEL_KWARGS
 import logging
 logger = logging.getLogger(__name__)
 
-from architecture.query_llm_server.messages_types import ChatMessage, Message
+from architecture.query_llm_server.messages_types import ChatMessage, SystemMessage, HumanMessage, AIMessage, Message
 from pydantic import BaseModel
+from typing import TypeVar
 
 
 class ChatCompletionRequest():
@@ -49,8 +50,7 @@ class ChatCompletionRequest():
 
 def chat_completion(messages: list[ChatMessage], model="mistral-nemo", options = {}) -> str:
     """ Chat with the LLM model via the API with our own messages types """
-    for m in messages:
-        m.model_validate(m)
+        
     logger.debug(f"Chat completion with messages : {messages}")
     chat_completion_request: ChatCompletionRequest = ChatCompletionRequest(model=model, messages=messages, stream=False, options=options)
     chat_completion_request.send_request()
@@ -74,3 +74,46 @@ def chat_completion_with_grammar(messages: list[ChatMessage], grammar: str, mode
     logger.debug(f"Chat completion with grammar : {grammar}")
     logger.debug(f"Options : {options}")
     return chat_completion(messages=messages, model=model, options=options)
+
+T = TypeVar('T', bound=BaseModel)
+
+def chat_completion_generate_object(
+    messages: list[ChatMessage], 
+    pydantic_model: T,
+    model: str = "mistral-nemo",
+    options: dict = {}
+) -> T:
+    """Chat with LLM using a Pydantic model as output structure guide"""
+    assert issubclass(pydantic_model, BaseModel)
+    
+    # Get JSON schema from Pydantic model
+    schema = pydantic_model.model_json_schema()
+    options["json_schema"] = schema
+    options["json_strict"] = True
+    
+    # Get JSON response with strict mode
+    json_response = chat_completion(messages, model=model, options=options)
+    
+    # Parse response into Pydantic model
+    return pydantic_model.model_validate_json(json_response)
+
+def memory_to_list_of_messages(memory: list[ChatMessage|T]) -> list[ChatMessage]:
+    messages_formatted: list[ChatMessage] = []
+    for entry in memory:
+        if type(entry) == ChatMessage or type(entry) == SystemMessage or type(entry) == HumanMessage or type(entry) == AIMessage:
+            messages_formatted.append(entry)
+        elif issubclass(type(entry), BaseModel):
+            messages_formatted.append(AIMessage(content=entry.model_dump_json()))
+        else:
+            raise Exception(f"Memory entry {entry} is not a ChatMessage nor a {T}")
+    return messages_formatted
+
+def chat_completion_generate_object_with_memory(messages: list[ChatMessage], memory: list[ChatMessage|T], pydantic_model:T, model="mistral-nemo", options={}) -> T:
+    # Step 1 : convert the jsonmodels + human message into a list of chat messages
+    messages_formatted: list[ChatMessage] = memory_to_list_of_messages(memory)
+    
+    # Step 2 : Add the existing messages
+    messages_formatted.extend(messages)
+    
+    # Step 3 : call the chat completion with the formatted messages
+    return chat_completion_generate_object(messages=messages_formatted, pydantic_model=pydantic_model, model=model, options=options)
