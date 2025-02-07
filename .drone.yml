@@ -1,0 +1,62 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+
+  - name: docker build backend
+    image: plugins/docker
+    settings:
+      repo: 192.168.0.185:5000/botassistant
+      registry: http://192.168.0.185:5000
+      tags:
+      - latest
+      - ${DRONE_COMMIT_SHA}
+      context: .
+      dockerfile: ./Dockerfile
+      insecure: true
+
+  - name: Tests
+    image: 192.168.0.185:5000/botassistant:${DRONE_COMMIT_SHA}
+    environment:
+      DOCKER_HOST: "tcp://docker:2376"
+      DOCKER_TLS_VERIFY: 1
+      DOCKER_CERT_PATH: "/certs/client"
+    commands:
+      - echo $PWD
+      - pytest -v --cov=. --cov-report term --cov-fail-under=10 .
+    volumes:
+      - name: dockersock
+        path: /var/run
+      - name: tls-certs
+        path: /certs
+  
+
+  - name: helm_deploy todo list agent
+    image: pelotech/drone-helm3
+    settings:
+      kube_api_server: https://192.168.0.174:16443
+      kube_token:
+        from_secret: kubetoken
+      skip_tls_verify: true
+      chart: ./agents/task_manager/helm_chart
+      release: task-manager-agent
+      values: containerImage="192.168.0.185:5000/botassistant:${DRONE_COMMIT_SHA}",containerName=mainbackend
+      namespace: botassistant
+
+# Specify docker:dind as a service
+services:
+- name: docker
+  image: docker:dind
+  privileged: true
+  volumes:
+  - name: dockersock
+    path: /var/run
+  - name: tls-certs
+    path: /certs
+
+volumes:
+- name: dockersock
+  temp: {}
+- name: tls-certs
+  temp: {}
