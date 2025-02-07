@@ -6,8 +6,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../"
 from llm_variable_provider import LLMVariableProvider, CombinedGBNFVariableProvider
 from datetime import datetime
 
-
-def test_verify_title_generated():
+# LLM variable provider will be removed as the JSON generation is working better !
+def _verify_title_generated():
     variable_types: list[tuple[str, str, str]] = [
         ("title", "The title of task", "str"),
         ("description", "Short description of the task", "str"),

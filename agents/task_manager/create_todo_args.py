@@ -14,7 +14,7 @@ from architecture.llm_variable_providers.llm_variable_provider import (
 
 from architecture.constants import DEFAULT_MODEL_KWARGS
 
-from agents.task_manager.todo_object import Todo
+from agents.task_manager.todo_object import Todo, TodoMemory
 
 # For rendering the reply
 from architecture.llm_variable_providers.rag_llm_variable_prodiver import (
@@ -105,12 +105,27 @@ def structure_system_prompt(projects: List[str]) -> str:
 from architecture.query_llm_server.query_llm import chat_completion_generate_object_with_memory
 from architecture.query_llm_server.messages_types import HumanMessage, SystemMessage, ChatMessage
 
+def create_todo_args_from_memories(
+    user_prompt: str, 
+    existing_todos: list[Todo], 
+    existing_projects: list[str],
+    memories: list[TodoMemory]
+) -> Todo:
+    #Turn the list of TodoMemory into a list of chat messages and Todos
+    modified_memory: list[ChatMessage|Todo] = []
+    for memory in memories:
+        modified_memory.append(SystemMessage(content=structure_system_prompt(memory.existing_projects)))
+        modified_memory.append(HumanMessage(content=memory.user_prompt)) # User message
+        modified_memory.append(memory.todo_created)
+    return create_todo_args(user_prompt, existing_todos, existing_projects, modified_memory)
+
+
 def create_todo_args(
     user_prompt: str, 
     existing_todos: list[Todo], 
     existing_projects: list[str],
     memory: list[ChatMessage|Todo]
-):
+) -> Todo:
     # Generate the arguments of the todo
     projects = ["- " + project for project in existing_projects]
     system_message: SystemMessage = SystemMessage(content=structure_system_prompt(projects))
