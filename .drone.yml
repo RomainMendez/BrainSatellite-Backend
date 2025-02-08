@@ -17,7 +17,7 @@ steps:
       insecure: true
 
   - name: Tests
-    image: 192.168.0.185:5000/botassistant:${DRONE_COMMIT_SHA}
+    image: http://192.168.0.185:5000/botassistant:${DRONE_COMMIT_SHA}
     environment:
       DOCKER_HOST: "tcp://docker:2376"
       DOCKER_TLS_VERIFY: 1
