@@ -5,8 +5,9 @@ FROM ${BASE_IMAGE}
 WORKDIR /usr/src/app
 COPY . .
 
-RUN ./build_environment.sh
+RUN pip install -r requirements.txt
 
-ENV PYTHON_ENTRYPOINT = ""
+ENV PYTHON_ENTRYPOINT=""
 
 ENTRYPOINT [ "./run.sh" ]
+CMD []

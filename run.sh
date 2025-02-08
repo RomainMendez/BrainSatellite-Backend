@@ -1,6 +1,8 @@
-#!/bin/bash
-# TODO : Add a container runtime test
+#!/bin/sh
 
-source ./env/bin/activate
+if [ -z "$PYTHON_ENTRYPOINT" ]; then
+  echo "Error: PYTHON_ENTRYPOINT is not set or is empty."
+  exit 1
+fi
 
 python $PYTHON_ENTRYPOINT
