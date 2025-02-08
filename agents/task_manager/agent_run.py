@@ -9,8 +9,25 @@ from agents.task_manager.create_todo_args import create_todo_args_from_memories
 
 from uvicorn import run
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import HTTPException
 
 app = FastAPI()
+origins = [
+    "http://localhost:3000",  # Allow localhost for development
+    "http://localhost:3000/",  # Allow localhost for development
+    "https://aylmao.net",  # Allow your website
+    "https://frontendmicrok8s.aylmao.net",
+    "https://frontendmicrok8s.aylmao.net/"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/healthcheck")
