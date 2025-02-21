@@ -34,15 +34,22 @@ app.add_middleware(
 def healthcheck():
     return {"status": "ok"}
 
-
+from pydantic import BaseModel
+class SuggestRequest(BaseModel):
+    user_prompt: str
+    memories: list[TodoMemory]
+    existing_todos: list[Todo]
+    existing_projects: list[str]
 
 @app.post("/suggest_on_message")
 def suggest(
-    user_prompt: str,
-    memories: list[TodoMemory],
-    existing_todos: list[Todo],
-    existing_projects: list[str]
+    suggest_request: SuggestRequest
 ) -> TodoWithInfoReturned:
+    user_prompt = suggest_request.user_prompt
+    memories = suggest_request.memories
+    existing_todos = suggest_request.existing_todos
+    existing_projects = suggest_request.existing_projects
+
     generated_todo: Todo = create_todo_args_from_memories(user_prompt, existing_todos, existing_projects, memories)
     final_construct: TodoWithInfoReturned = TodoWithInfoReturned(
         todo_created=generated_todo,
