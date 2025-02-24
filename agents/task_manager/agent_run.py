@@ -14,8 +14,8 @@ from fastapi import HTTPException
 
 app = FastAPI()
 origins = [
-    "http://localhost:3000",  # Allow localhost for development
-    "http://localhost:3000/",  # Allow localhost for development
+    "http://localhost:5173/",  # Allow localhost for development
+    "http://192.168.0.184:5173",  # Allow localhost for development
     "https://aylmao.net",  # Allow your website
     "https://frontendmicrok8s.aylmao.net",
     "https://frontendmicrok8s.aylmao.net/"
