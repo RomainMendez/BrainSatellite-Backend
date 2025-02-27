@@ -85,7 +85,7 @@ def determine_if_new_todo_is_redundant(
     return choice == "- yes"
 
 prompt_format: str = """
-You are a helpful assistant, you are maintaining a todo list for your boss.
+You are a helpful assistant, you are maintaining a todo list the user.
 You have determined that you need to create a new todo in the list.
 The user has a list of projects already created, you can either create a new one or select an existing one.
 """

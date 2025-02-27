@@ -12,7 +12,7 @@ class Todo(BaseModel):
     project: str
     status: str
     tags: list[str]
-    due_date: datetime
+    due_date: datetime|None
     
 class TodoMemory(BaseModel):
     todo_created: Todo
