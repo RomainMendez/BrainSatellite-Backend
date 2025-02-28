@@ -63,7 +63,7 @@ def suggest(
     return final_construct
 
 @app.post("/embed_prompt")
-def embed_prompt(user_prompt: str) -> list[float]:
+def embed(user_prompt: str) -> list[float]:
     response = embed_prompt(user_prompt)
     return response
 
