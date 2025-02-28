@@ -44,6 +44,12 @@ class SuggestRequest(BaseModel):
     existing_todos: list[Todo]
     existing_projects: list[str]
 
+class EmbedRequest(BaseModel):
+    user_prompt: str
+
+class EmbedResponse(BaseModel):
+    embeddings: list[float]
+
 @app.post("/suggest_on_message")
 def suggest(
     suggest_request: SuggestRequest
@@ -63,9 +69,9 @@ def suggest(
     return final_construct
 
 @app.post("/embed_prompt")
-def embed(user_prompt: str) -> list[float]:
-    response = embed_prompt(user_prompt)
-    return response
+def embed(embed_request: EmbedRequest) -> EmbedResponse:
+    response = embed_prompt(embed_request.user_prompt)
+    return EmbedResponse(embeddings=response)
 
 if __name__ == "__main__":
     run(app, host="0.0.0.0", port=8000)
