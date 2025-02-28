@@ -12,6 +12,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import HTTPException
 
+# Adding the method to retrieve the embeddings
+from agents.task_manager.retrieve_embeddings import embed_prompt
+
 app = FastAPI()
 origins = [
     "http://localhost:5173/",  # Allow localhost for development
@@ -54,10 +57,15 @@ def suggest(
     final_construct: TodoWithInfoReturned = TodoWithInfoReturned(
         todo_created=generated_todo,
         is_redundant=False,
-        is_redundant_with=None
+        is_redundant_with=None,
+        embeddings_of_user_prompt=embed_prompt(user_prompt)
     )
     return final_construct
 
+@app.post("/embed_prompt")
+def embed_prompt(user_prompt: str) -> list[float]:
+    response = embed_prompt(user_prompt)
+    return response
 
 if __name__ == "__main__":
     run(app, host="0.0.0.0", port=8000)

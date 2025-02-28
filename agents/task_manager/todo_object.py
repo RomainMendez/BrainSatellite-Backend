@@ -24,3 +24,4 @@ class TodoWithInfoReturned(BaseModel):
     todo_created: Todo
     is_redundant: bool
     is_redundant_with: Todo|None
+    embeddings_of_user_prompt: list[float]
