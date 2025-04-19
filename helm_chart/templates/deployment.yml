@@ -29,7 +29,7 @@ spec:
             - containerPort: 8000
           env:
             - name: PYTHON_ENTRYPOINT
-              value: "agents/task_manager/agent_run.py"
+              value: "main.py"
             - name: SUPABASE_URL
               valueFrom:
                 secretKeyRef:

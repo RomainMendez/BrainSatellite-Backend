@@ -39,8 +39,8 @@ steps:
       kube_token:
         from_secret: kubetoken
       skip_tls_verify: true
-      chart: ./agents/task_manager/helm_chart
-      release: task-manager-agent
+      chart: ./helm_chart
+      release: brainsatellite-backend
       values: containerImage="192.168.0.185:5000/botassistant:${DRONE_COMMIT_SHA}",containerName=mainbackend
       namespace: botassistant
 
