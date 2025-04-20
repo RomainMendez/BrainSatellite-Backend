@@ -45,13 +45,13 @@ def embed(
 ) -> EmbedResponse:
     return embed(embed_request)
 
-
+from agents.default_agent.decide_on_prompt import UserPrompt, decide_on_prompt, PromptDecision
 @app.post("/decide_action", tags=["common flows"])
-def decide_action() -> str:
+def decide_action(user_prompt: UserPrompt) -> PromptDecision:
     """
-    This is a placeholder for the decide action endpoint.
+    This is an API call to use context, memory and a user prompt to decide on an action to return to the user.
     """
-    raise HTTPException(status_code=501, detail="Not implemented yet.")
+    return decide_on_prompt(user_prompt)
 
 if __name__ == "__main__":
     run(app, host="0.0.0.0", port=8000)
