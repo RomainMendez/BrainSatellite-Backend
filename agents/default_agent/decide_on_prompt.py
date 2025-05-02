@@ -1,4 +1,4 @@
-from architecture.decision_trees.gbnf_trees import MultiPromptGBNFDecistionTree
+from architecture.decision_trees.gbnf_trees import ManagedMultiPromptGBNFDecisionTree
 from pydantic import BaseModel, field_validator
 from typing import Literal
 
@@ -54,9 +54,9 @@ def decide_on_prompt(prompt: UserPrompt) -> PromptDecision:
     
     # If there is no similar decision, we need to create a new one.
     # Creating the decision tree
-    decision_tree = MultiPromptGBNFDecistionTree(
+    decision_tree = ManagedMultiPromptGBNFDecisionTree(
         base_prompt=prompt.user_prompt,
-        static_choices=[f"- {choice}" for choice in AVAILABLE_ACTIONS],
+        static_choices=AVAILABLE_ACTIONS,
         memory_addon=[(DECISION_PROMPT, decision.choices, decision.user_prompt, decision.decision) for decision in prompt.previous_decisions]
     )
 

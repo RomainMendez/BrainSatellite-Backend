@@ -46,3 +46,19 @@ class MultiPromptGBNFDecistionTree(BaseLLMTree):
         
     def decide_on_message(self, message: str, can_be_none=False, **chain_kwargs) -> Optional[str]:
         return self.underlyingGBNFTree.decide_on_message(message, previous_messages=self.memory_as_messages, can_be_none=can_be_none, **chain_kwargs)
+
+class ManagedMultiPromptGBNFDecisionTree(DecisionTree):
+    """MultiPromptGBNFDecisionTree wrapper where choices don't need "-" in their beginning."""
+    def __init__(
+        self, 
+        base_prompt:str, 
+
+        # Order of the strings in the memory : base_prompt, static_choices, prompt, decision
+        memory_addon: list[tuple[str, list[str], str, str]], 
+        static_choices: List[str]|None = None, 
+        model_kwargs: Dict[str, str] = DEFAULT_MODEL_KWARGS,
+    ):
+        modified_static_choices = [f"- {choice}" for choice in static_choices]
+        self.underlyingGBNFTree = MultiPromptGBNFDecistionTree(base_prompt=base_prompt, static_choices=modified_static_choices, memory_addon=memory_addon, model_kwargs=model_kwargs)
+    def decide_on_message(self, message: str, can_be_none=False, **chain_kwargs) -> Optional[str]:
+        return self.underlyingGBNFTree.decide_on_message(message, can_be_none=can_be_none, **chain_kwargs)[2:]
