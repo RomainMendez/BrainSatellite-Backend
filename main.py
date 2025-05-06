@@ -39,7 +39,7 @@ def healthcheck():
     return {"status": "ok"}
 
 @app.post("/suggest_on_message", tags=["task-manager"])
-def suggest(
+def suggest_on_message(
     suggest_request: SuggestRequest
 ) -> TodoWithInfoReturned:
     return suggest(suggest_request)
