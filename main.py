@@ -10,6 +10,8 @@ from agents.task_manager.retrieve_embeddings import embed_prompt
 from agents.task_manager.agent_run import suggest, EmbedRequest, EmbedResponse, SuggestRequest
 from agents.task_manager.todo_object import Todo, TodoMemory, TodoWithInfoReturned
 
+from agents.task_manager.retrieve_embeddings import embed_prompt
+
 from starlette.responses import StreamingResponse
 
 app = FastAPI(title="BrainSatellite Backend API", version="0.0.1")
@@ -46,7 +48,10 @@ def suggest(
 def embed(
     embed_request: EmbedRequest
 ) -> EmbedResponse:
-    return embed(embed_request)
+    embeddings : list[float] = embed_prompt(embed_request.user_prompt)
+    if not embeddings:
+        raise HTTPException(status_code=500, detail="No embeddings returned")
+    return EmbedResponse(embeddings=embeddings)
 
 from agents.default_agent.decide_on_prompt import UserPrompt, decide_on_prompt, PromptDecision
 @app.post("/decide_action", tags=["common flows"])
