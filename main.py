@@ -15,6 +15,7 @@ from starlette.responses import StreamingResponse
 app = FastAPI(title="BrainSatellite Backend API", version="0.0.1")
 origins = [
     "http://localhost:5173/",  # Allow localhost for development
+    "http://localhost:5173",  # Allow localhost for development
     "http://192.168.0.184:5173",  # Allow localhost for development
     "https://aylmao.net",  # Allow your website
     "https://frontendmicrok8s.aylmao.net",
