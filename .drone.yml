@@ -35,7 +35,7 @@ steps:
   - name: helm_deploy todo list agent
     image: pelotech/drone-helm3
     settings:
-      kube_api_server: https://192.168.0.174:16443
+      kube_api_server: https://192.168.0.100:16443
       kube_token:
         from_secret: kubetoken
       skip_tls_verify: true
