@@ -15,6 +15,9 @@ You are a note taking assistant. You will be given a user prompt and you need to
 The entities could be concepts, notes and co that can be used in the knowledge base of the user.
 """
 
+from supabase import Client
+from agents.supabase_instance import supabase
+
 def extract_entities_from_prompt(user_prompt: str, memories: list[PromptExtractEntitiesMemory]) -> list[str]:
     """
     Extracts the entities from the user prompt.
@@ -30,6 +33,11 @@ def extract_entities_from_prompt(user_prompt: str, memories: list[PromptExtractE
     returned_message : str = chat_completion(messages=all_messages)
 
     return [s.strip() for s in returned_message.split(",")]
+
+def retrieve_notes_from_supabase(supabase: Client, entities_to_search: list[str]) -> list:
+    relevant_notes = []
+    supabase.table("notes").select("title").ilike("title", f"%{entities_to_search[0]}%").execute()
+    return []
 
 def retrieve_relevant_notes(note_name: str):
     pass
