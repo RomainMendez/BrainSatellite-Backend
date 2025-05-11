@@ -65,7 +65,7 @@ and the other field is "notes_related" which encodes the links between that piec
 
 
 def handle_new_knowledge(
-    supabase: Client, user_prompt: str, state: KnowledgeBaseCreationState
+    supabase: Client, user_prompt: str, state: KnowledgeBaseCreationState, user_id: str
 ):
     if state.step == "ExtractEntities":
         # Retrieve the entities related from the user prompt
@@ -77,8 +77,6 @@ def handle_new_knowledge(
         state.entities = entities
         state.entities_generation_messages = assembled_messages
         state.step = "NoteRetrieval"
-        print(state)
-        print("-*-*-*-*")
         yield state
 
     if state.step == "NoteRetrieval":
@@ -103,8 +101,4 @@ def handle_new_knowledge(
             )
         )
         state.snippets_generated = new_snippets.snippets
-
-        print(new_snippets)
-        print("----")
-        print(state)
         yield state

@@ -75,5 +75,23 @@ def stream_json():
     """
     return StreamingResponse(generate_json_stream(), media_type="application/json")
 
+from agents.notes_agent.create_note import KnowledgeBaseCreationState
+from pydantic import BaseModel
+class NewKnowledgePayload(BaseModel):
+    user_id: str
+    prompt: str
+    state: KnowledgeBaseCreationState
+from agents.supabase_instance import supabase
+
+from agents.notes_agent.create_note import handle_new_knowledge
+
+def asynchronous_data_generation(data: NewKnowledgePayload):
+    for event in handle_new_knowledge(supabase, data.prompt, data.state, data.user_id):
+        yield json.dumps(event.model_dump()) + "\n"
+
+@app.post("/new_knowledge", tags=["knowledge_base"])
+def new_knowledge(data :NewKnowledgePayload):
+    return StreamingResponse(asynchronous_data_generation(data), media_type="text/event-stream")
+
 if __name__ == "__main__":
     run(app, host="0.0.0.0", port=8000)
