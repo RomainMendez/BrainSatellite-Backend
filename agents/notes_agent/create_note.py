@@ -41,7 +41,7 @@ class NewSnippetsGenerated(BaseModel):
 #   This will represent the current situation in the creation process, allowing seamless resuming in the process
 #
 class KnowledgeBaseCreationState(BaseModel):
-    step: Literal["ExtractEntities", "NoteRetrieval", "Return"]
+    step: Literal["ExtractEntities", "NoteRetrieval", "Return", "SnippetGeneration"]
     # Will only be populated if we are at a specific state
     entities: list[str] | None
     entities_generation_messages: list[ChatMessage | ExtractedEntities] | None
@@ -61,6 +61,7 @@ You take user messages and generate a JSON representing the new knowledge to be 
 The snippets should be tied to the entities you extracted earlier !
 A snippet you are being asked to submit has two components, a "content" field is just the note that you are keeping, 
 and the other field is "notes_related" which encodes the links between that piece of knowledge and the notes.
+Note that the "content" field is a markdown field, so pleaes write it in Markdown.
 """
 
 
@@ -100,5 +101,6 @@ def handle_new_knowledge(
                 messages=base_messages, pydantic_model=NewSnippetsGenerated, memory=state.entities_generation_messages
             )
         )
+        state.step = "SnippetGeneration"
         state.snippets_generated = new_snippets.snippets
         yield state
