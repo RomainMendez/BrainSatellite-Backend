@@ -7,7 +7,7 @@ steps:
   - name: docker build backend
     image: plugins/docker
     settings:
-      repo: 192.168.0.185:5000/botassistant
+      repo: 192.168.0.185:5000/brainsatellitebackend
       registry: http://192.168.0.185:5000
       tags:
       - latest
@@ -17,7 +17,7 @@ steps:
       insecure: true
 
   - name: Tests
-    image: 192.168.0.185:5000/botassistant:${DRONE_COMMIT_SHA}
+    image: 192.168.0.185:5000/brainsatellitebackend:${DRONE_COMMIT_SHA}
     environment:
       DOCKER_HOST: "tcp://docker:2376"
       DOCKER_TLS_VERIFY: 1
@@ -31,18 +31,28 @@ steps:
       - name: tls-certs
         path: /certs
   
+  - name: create-kubeconfig-file-from-secret
+    image: alpine
+    environment:
+      KUBECONFIG:
+        from_secret: kubeconfig
+    commands:
+      - echo "$KUBECONFIG" > /kubeconfig/kubeconfig
+    volumes:
+      - name: kubeconfig
+        path: /kubeconfig
 
   - name: helm_deploy todo list agent
-    image: pelotech/drone-helm3
+    image: fpedrazas/drone-helm
     settings:
-      kube_api_server: https://192.168.0.100:16443
-      kube_token:
-        from_secret: kubetoken
       skip_tls_verify: true
       chart: ./helm_chart
       release: brainsatellite-backend
-      values: containerImage="192.168.0.185:5000/botassistant:${DRONE_COMMIT_SHA}",containerName=mainbackend
-      namespace: botassistant
+      values: containerImage="192.168.0.185:5000/brainsatellitebackend:${DRONE_COMMIT_SHA}",containerName=mainbackend
+      namespace: brainsatellite-backend
+    volumes:
+      - name: kubeconfig
+        path: /root/.kube
 
 # Specify docker:dind as a service
 services:
@@ -59,4 +69,6 @@ volumes:
 - name: dockersock
   temp: {}
 - name: tls-certs
+  temp: {}
+- name: kubeconfig
   temp: {}
