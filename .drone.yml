@@ -51,7 +51,7 @@ steps:
       KUBECONFIG: /kubeconfig/kubeconfig
     commands:
       - helm version
-      - helm install brainsatellite-backend ./helm_chart --kubeconfig /kubeconfig/kubeconfig --set containerImage="192.168.0.185:5000/brainsatellitebackend:${DRONE_COMMIT_SHA}"
+      - helm install brainsatellite-backend ./helm_chart --namespace brainsatellite-backend --kubeconfig /kubeconfig/kubeconfig --set containerImage="192.168.0.185:5000/brainsatellitebackend:${DRONE_COMMIT_SHA}"
 
 
 # Specify docker:dind as a service
