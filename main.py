@@ -23,6 +23,7 @@ origins = [
     "https://frontendmicrok8s.aylmao.net",
     "https://frontendmicrok8s.aylmao.net/"
     "http://localhost"
+    "http://localhost/"
 ]
 
 app.add_middleware(
