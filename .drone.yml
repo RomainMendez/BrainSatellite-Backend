@@ -42,17 +42,17 @@ steps:
       - name: kubeconfig
         path: /kubeconfig
 
-  - name: helm_deploy todo list agent
-    image: fpedrazas/drone-helm
-    settings:
-      skip_tls_verify: true
-      chart: ./helm_chart
-      release: brainsatellite-backend
-      values: containerImage="192.168.0.185:5000/brainsatellitebackend:${DRONE_COMMIT_SHA}",containerName=mainbackend
-      namespace: brainsatellite-backend
+  - name: helm-deploy
+    image: ghcr.io/helm/helm:latest
     volumes:
       - name: kubeconfig
-        path: /root/.kube
+        path: /kubeconfig
+    environment:
+      KUBECONFIG: /kubeconfig/kubeconfig
+    commands:
+      - helm version
+      - helm install brainsatellite-backend ./helm_chart --kubeconfig /kubeconfig/kubeconfig --set containerImage="192.168.0.185:5000/brainsatellitebackend:${DRONE_COMMIT_SHA}"
+
 
 # Specify docker:dind as a service
 services:
