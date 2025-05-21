@@ -43,7 +43,7 @@ steps:
         path: /kubeconfig
 
   - name: helm-deploy
-    image: ghcr.io/helm/helm:latest
+    image: alpine/helm:latest
     volumes:
       - name: kubeconfig
         path: /kubeconfig
