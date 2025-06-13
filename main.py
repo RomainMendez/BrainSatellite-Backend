@@ -1,16 +1,17 @@
 # Importing the todo type
-
+import base64
 from uvicorn import run
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import HTTPException
+from fastapi import File, UploadFile, Form
 
 # Adding the method to retrieve the embeddings
-from agents.task_manager.retrieve_embeddings import embed_prompt
-from agents.task_manager.agent_run import suggest, EmbedRequest, EmbedResponse, SuggestRequest
-from agents.task_manager.todo_object import Todo, TodoMemory, TodoWithInfoReturned
+from .agents.task_manager.retrieve_embeddings import embed_prompt
+from .agents.task_manager.agent_run import suggest, EmbedRequest, EmbedResponse, SuggestRequest
+from .agents.task_manager.todo_object import Todo, TodoMemory, TodoWithInfoReturned
 
-from agents.task_manager.retrieve_embeddings import embed_prompt
+from .agents.task_manager.retrieve_embeddings import embed_prompt
 
 from starlette.responses import StreamingResponse
 
@@ -93,6 +94,31 @@ def asynchronous_data_generation(data: NewKnowledgePayload):
 @app.post("/new_knowledge", tags=["knowledge_base"])
 def new_knowledge(data :NewKnowledgePayload):
     return StreamingResponse(asynchronous_data_generation(data), media_type="text/event-stream")
+
+@app.post("/upload_audio", tags=["audio"])
+async def upload_audio(
+    file: UploadFile = File(...),
+    temperature: float = Form(0.02),
+    response_format: str = Form("verbose_json")
+):
+    """Endpoint to receive and process audio files."""
+    # Get file info
+    content = await file.read()
+    file_type = file.content_type
+    file_size = len(content)
+    
+    # Convert to base64
+    base64_encoded = base64.b64encode(content).decode('utf-8')
+    
+    # For debugging
+    result = {
+        "text": "Audio processed",
+        "file_type": file_type,
+        "file_size_bytes": file_size,
+        "base64_sample": base64_encoded[:100] + "...",  # Sample of base64
+        "status": "success"
+    }
+    return result
 
 if __name__ == "__main__":
     run(app, host="0.0.0.0", port=8000)

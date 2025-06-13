@@ -1,9 +1,9 @@
 # Importing the todo type
-from agents.task_manager.todo_object import Todo, TodoMemory, TodoWithInfoReturned
-from agents.task_manager.create_todo_args import create_todo_args_from_memories
+from .todo_object import Todo, TodoMemory, TodoWithInfoReturned
+from .create_todo_args import create_todo_args_from_memories
 
 # Adding the method to retrieve the embeddings
-from agents.task_manager.retrieve_embeddings import embed_prompt
+from .retrieve_embeddings import embed_prompt
 
 from pydantic import BaseModel
 class SuggestRequest(BaseModel):

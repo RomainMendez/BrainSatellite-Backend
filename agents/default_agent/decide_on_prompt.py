@@ -1,13 +1,16 @@
 from architecture.decision_trees.gbnf_trees import ManagedMultiPromptGBNFDecisionTree
 from pydantic import BaseModel, field_validator
-from typing import Literal
+from typing import Literal, Optional
 
 from .prompt_decision import PromptDecision, has_similar_enough_decision, get_decision_with_max_similarity
 
+import logging
+logger = logging.getLogger(__file__) # Logging per file is probably the best
 
 class UserPrompt(BaseModel):
     user_prompt: str
     previous_decisions: list[PromptDecision]
+    possible_actions: Optional[list[str]] # In case the using API wants to reduce or increase the choices in options
 
 
 from agents.task_manager.create_todo_args import create_todo_args_from_memories
@@ -20,6 +23,7 @@ AVAILABLE_ACTIONS : list[str] = [
     "Delete a project",
     "Create a new note",
     "Create a new event",
+    "Reply using the knowledge base"
 ]
 
 # Define a type for the available actions
@@ -31,6 +35,7 @@ AvailableActionType = Literal[
     "Delete a project",
     "Create a new note",
     "Create a new event",
+    "Reply using the knowledge base"
 ]
 
 
@@ -52,11 +57,19 @@ def decide_on_prompt(prompt: UserPrompt) -> PromptDecision:
         decision : PromptDecision = get_decision_with_max_similarity(prompt.previous_decisions)
         return decision.decision, True
     
+    choices: list[str] = AVAILABLE_ACTIONS
+    if prompt.possible_actions != None:
+        choices = prompt.possible_actions
+        logger.debug("The request had actions, taking those to do the decision")
+        logger.debug(str(choices))
+    else:
+        logger.debug("The request did not have any choices specified, defaulting on the base list.")
+    
     # If there is no similar decision, we need to create a new one.
     # Creating the decision tree
     decision_tree = ManagedMultiPromptGBNFDecisionTree(
         base_prompt=prompt.user_prompt,
-        static_choices=AVAILABLE_ACTIONS,
+        static_choices=choices,
         memory_addon=[(DECISION_PROMPT, decision.choices, decision.user_prompt, decision.decision) for decision in prompt.previous_decisions]
     )
 
