@@ -7,11 +7,11 @@ from fastapi import HTTPException
 from fastapi import File, UploadFile, Form
 
 # Adding the method to retrieve the embeddings
-from .agents.task_manager.retrieve_embeddings import embed_prompt
-from .agents.task_manager.agent_run import suggest, EmbedRequest, EmbedResponse, SuggestRequest
-from .agents.task_manager.todo_object import Todo, TodoMemory, TodoWithInfoReturned
+from agents.task_manager.retrieve_embeddings import embed_prompt
+from agents.task_manager.agent_run import suggest, EmbedRequest, EmbedResponse, SuggestRequest
+from agents.task_manager.todo_object import Todo, TodoMemory, TodoWithInfoReturned
 
-from .agents.task_manager.retrieve_embeddings import embed_prompt
+from agents.task_manager.retrieve_embeddings import embed_prompt
 
 from starlette.responses import StreamingResponse
 

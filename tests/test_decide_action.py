@@ -7,7 +7,8 @@ def test_basic_prompt():
     # Creating the prompt
     prompt = UserPrompt(
         user_prompt="Create a new task",
-        previous_decisions=[]
+        previous_decisions=[],
+        possible_actions=None
     )
     # Getting the decision
     decision: PromptDecision = decide_on_prompt(prompt)
