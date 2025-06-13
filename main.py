@@ -70,6 +70,17 @@ def generate_json_stream():
         yield json.dumps({"message": f"Chunk {i}"}) + "\n"
         time.sleep(1)
 
+from architecture.query_llm_server.messages_types import ChatMessage, HumanMessage, SystemMessage, AIMessage
+from architecture.query_llm_server.query_llm import chat_completion_stream
+from pydantic import BaseModel
+class ChatCompletionRequest(BaseModel):
+    messages: list[ChatMessage]
+@app.post("/basic_chat_completion", tags=["knowledge_base"])
+def basic_chat_completion(request: ChatCompletionRequest):
+    list_of_messages: list[ChatMessage] = request.messages
+    return StreamingResponse(chat_completion_stream(list_of_messages), media_type="application/json")
+    
+
 @app.get("/stream_json", tags=["streaming"])
 def stream_json():
     """

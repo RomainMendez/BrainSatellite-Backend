@@ -12,6 +12,8 @@ from architecture.query_llm_server.messages_types import ChatMessage, SystemMess
 from pydantic import BaseModel
 from typing import TypeVar
 
+import json
+
 
 class ChatCompletionRequest():
 
@@ -47,6 +49,46 @@ class ChatCompletionRequest():
         assert len(self.response["choices"]) == 1
         return self.response["choices"][0]["message"]["content"]
 
+class MessageChunk(BaseModel):
+    content: str
+
+def chat_completion_stream(messages: list[ChatMessage], model="mistral-nemo", options = {}):
+    """Chat with the LLM model via the API with streaming enabled"""
+    
+    logger.debug(f"Chat completion streaming with messages: {messages}")
+    
+    # Prepare request payload
+    json_object = dict(DEFAULT_MODEL_KWARGS)
+    json_object["model"] = model
+    json_object["messages"] = [message.model_dump() for message in messages]
+    json_object["stream"] = True
+    json_object.update(options)
+    
+    with requests.post(f"{API_BASE}/chat/completions", json=json_object, stream=True) as response:
+        response.raise_for_status()
+        
+        for line in response.iter_lines():
+            if not line:
+                continue
+                
+            # Skip "data: " prefix and parse JSON
+            if line.startswith(b"data: "):
+                line = line[6:]  # Skip "data: "
+                
+                # Skip "[DONE]" message
+                if line == b"[DONE]":
+                    break
+                
+                    
+                try:
+                    chunk = json.loads(line)
+                    if "choices" in chunk and len(chunk["choices"]) > 0:
+                        content = chunk["choices"][0].get("delta", {}).get("content", "")
+                        if content:
+                            yield json.dumps(MessageChunk(content=content).model_dump()) + "\n"
+                except Exception as e:
+                    logger.error(f"Error parsing chunk: {e}")
+    
 
 def chat_completion(messages: list[ChatMessage], model="mistral-nemo", options = {}) -> str:
     """ Chat with the LLM model via the API with our own messages types """
