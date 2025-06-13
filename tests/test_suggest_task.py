@@ -1,3 +1,6 @@
+import os 
+print(os.getcwd())
+
 from main import suggest_on_message, SuggestRequest, Todo, TodoMemory, TodoWithInfoReturned
 from datetime import datetime
 
