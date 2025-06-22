@@ -1,3 +1,6 @@
+import logging
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+
 # Importing the todo type
 import base64
 from uvicorn import run

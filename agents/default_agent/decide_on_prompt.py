@@ -39,7 +39,7 @@ AvailableActionType = Literal[
 ]
 
 
-DECISION_PROMPT : str = """You are a helpful assistant. The user is sending messages, you have to classify them for the best action to display. Here are the choices you have :"""
+DECISION_PROMPT : str = """You are a helpful assistant. Classify the user messages according to their wishes. Here are the choices you have :"""
 SIMILARITY_THRESHOLD : float = 0.8
 
 class PromptDecision(BaseModel):
@@ -68,7 +68,7 @@ def decide_on_prompt(prompt: UserPrompt) -> PromptDecision:
     # If there is no similar decision, we need to create a new one.
     # Creating the decision tree
     decision_tree = ManagedMultiPromptGBNFDecisionTree(
-        base_prompt=prompt.user_prompt,
+        base_prompt=DECISION_PROMPT,
         static_choices=choices,
         memory_addon=[(DECISION_PROMPT, decision.choices, decision.user_prompt, decision.decision) for decision in prompt.previous_decisions]
     )
